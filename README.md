@@ -1,6 +1,6 @@
 # Honeypot: Gift Card Verification
 
-XG7Y-MG57-81X2-T110
+(https://itunes-hp.vercel.app/?code=X-987654-3456)
 
 ### Legal and Privacy Notice:
 
